@@ -1,0 +1,59 @@
+<!doctype html>
+<html lang="zh-CN">
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<meta http-equiv="refresh" content="60">
+<title>当前电脑 IPv4</title>
+<style>
+  :root{color-scheme:dark;font-family:Segoe UI,Microsoft YaHei,sans-serif}
+  *{box-sizing:border-box}body{margin:0;min-height:100vh;display:grid;place-items:center;background:#101923;color:#eaf2f9;padding:24px}
+  main{width:min(100%,560px);padding:40px;background:#172534;border:1px solid #30465a;border-radius:24px}
+  .label{color:#92aec5;font-size:14px;letter-spacing:2px}h1{font-size:clamp(30px,8vw,48px);font-weight:600;letter-spacing:1px;margin:28px 0}
+  button,a{font:inherit}button{cursor:pointer;border:0;border-radius:10px;background:#9de8ca;color:#11251f;padding:12px 22px}
+  .toast{position:fixed;bottom:36px;left:50%;transform:translate(-50%,16px);background:#9de8ca;color:#11251f;padding:12px 22px;border-radius:30px;box-shadow:0 8px 32px #0005;opacity:0;transition:opacity .2s,transform .2s;pointer-events:none}
+  .toast.show{opacity:1;transform:translate(-50%,0)}
+  p{font-size:14px;line-height:1.8;color:#adc1d1}time{display:block}a{color:#9de8ca}.notice{margin-top:28px;border-top:1px solid #30465a;padding-top:20px}.warning{color:#ffd098}
+</style>
+<main>
+  <div class="label">SUNSHINE · IPv4</div>
+  <h1 id="ip">10.102.198.161</h1>
+  <button id="copy" type="button">复制 IPv4</button>
+  <p>最近成功检测<time id="updated" datetime="2026-11-07T11:16:48.2440241+08:00">2026-11-07T11:16:48.2440241+08:00</time></p>
+  <p id="freshness"></p>
+  <p class="notice">电脑端每 10 分钟检测并推送；本页每分钟重新载入。<br>GitHub Pages 发布可能延迟。此地址不代表 Sunshine 在线或手机一定可达。</p>
+  <a href="ip.json">查看 ip.json</a>
+</main>
+<div class="toast" id="toast" role="status" aria-live="polite"></div>
+<script id="current-data" type="application/json">{
+    "schema":  1,
+    "ipv4":  "10.102.198.161",
+    "updated_at":  "2026-11-07T11:16:48.2440241+08:00",
+    "changed_at":  "2026-11-07T10:49:54.5875112+08:00"
+}</script>
+<script>
+  const embedded=JSON.parse(document.getElementById('current-data').textContent);
+  let current=embedded;
+  function show(d){
+    current=d;
+    document.getElementById('ip').textContent=d.ipv4;
+    document.getElementById('updated').textContent=new Date(d.updated_at).toLocaleString();
+    const stale=Date.now()-Date.parse(d.updated_at)>40*60*1000;
+    const el=document.getElementById('freshness');
+    el.textContent=stale?'超过 40 分钟未更新，请检查电脑端脚本。':'最近检测成功 · 每 10 分钟同步';
+    el.className=stale?'warning':'';
+  }
+  show(embedded);
+  // file:// previews use embedded data; HTTP/Pages reads the same ip.json as a future helper app.
+  if(location.protocol==='http:'||location.protocol==='https:'){
+    fetch('ip.json?t='+Date.now(),{cache:'no-store'}).then(r=>{if(!r.ok)throw Error();return r.json()}).then(d=>{
+      if(d.schema!==1||!/^\d{1,3}(\.\d{1,3}){3}$/.test(d.ipv4)||!Number.isFinite(Date.parse(d.updated_at)))throw Error();show(d);
+    }).catch(()=>{document.getElementById('freshness').textContent='刷新失败，显示页面生成时的地址。';});
+  }
+  let toastTimer;
+  function toast(message){const el=document.getElementById('toast');el.textContent=message;el.classList.add('show');clearTimeout(toastTimer);toastTimer=setTimeout(()=>el.classList.remove('show'),2400);}
+  document.getElementById('copy').onclick=async()=>{
+    try{await navigator.clipboard.writeText(current.ipv4);toast('IPv4 已复制 ✓');}
+    catch{window.prompt('请复制 IPv4：',current.ipv4);}
+  };
+</script>
+</html>
